@@ -20,7 +20,7 @@ class Spider():
         # 控制循环
         books = []
         # while count <= 225 :
-        while count <= 26 :
+        while count <= 225 :
             sub_url = Spider.url+'?start='+str(count)
             links = self.__fetch_one_links(sub_url)
             result_links = self.__analysis_link(links)
@@ -34,7 +34,7 @@ class Spider():
                 books.append(dic)
                 book_number += 1
             count += 25
-            print('爬取结束....')
+        print('爬取结束....')
         print('books的长度为'+str(len(books)))
         return books
 
