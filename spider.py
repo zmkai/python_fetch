@@ -30,6 +30,8 @@ class Spider():
             for result_link in result_links:
                 print('爬取第'+str(book_number)+'本书籍中....')
                 book_infos,simple_content,book_name = self.__fetch_bookinfo(result_link)
+                if book_infos==None and simple_content == None and book_name == None:
+                    continue
                 dic = self.__analysis_bookinfo(book_infos,simple_content,book_name)
                 books.append(dic)
                 book_number += 1
@@ -57,18 +59,23 @@ class Spider():
         return result_links
 
 
-    #抓取包含书籍信息的组
+    #抓取包含书籍信息的组,如果出现异常，返回是三个None
     def __fetch_bookinfo(self,link):
         # link = 'https://book.douban.com/subject/1770782/'
         bookinfo_pattern = '<div id="info"[\s\S]*?>([\s\S]*?)</div>'
         simple_pattern = '<div class="intro">([\s\S]*?)</div>'
         book_name_pattern = '<span property="v:itemreviewed">([\s\S]*?)</span>'
-        r = request.urlopen(link)
-        info_html = r.read()
-        info_html = str(info_html,encoding='utf-8')
-        simple_content = re.findall(simple_pattern,info_html)
-        book_infos = re.findall(bookinfo_pattern,info_html)
-        book_name = re.findall(book_name_pattern,info_html)
+        try:
+            r = request.urlopen(link)
+        except Exception:
+            print('连接'+link+'出现异常')
+            return None,None,None
+        else:
+            info_html = r.read()
+            info_html = str(info_html,encoding='utf-8')
+            simple_content = re.findall(simple_pattern,info_html)
+            book_infos = re.findall(bookinfo_pattern,info_html)
+            book_name = re.findall(book_name_pattern,info_html)
         # print(book_name)
         # print(book_infos[0])
         # print(simple_content[0])
@@ -116,18 +123,33 @@ class Spider():
             for key in book.keys():
                 print(key+'---->'+book.get(key))
             number += 1
-
+    # 测试一本详情信息爬取
     def __test_one_book(self,link):
         book_infos,simple_content,book_name = self.__fetch_bookinfo(link)
+        # print(book_infos,simple_content,book_name)
+        if book_infos==None and simple_content == None and book_name == None:
+            return None
+        # print(book_infos,simple_content)
         dic = self.__analysis_bookinfo(book_infos,simple_content,book_name)
-        print(dic)    
+        print(dic.get('书名'))    
+    # 测试一页数据是否爬取正常
+    def _test_one_page(self,one_page_link):
+        links = self.__fetch_one_links(one_page_link)
+        result_links = self.__analysis_link(links)
+        # print(result_links)
+        for link in result_links:
+            self.__test_one_book(link)
 
     def go(self):
        books = self.__loop_all_page()
        print(len(books))
        self.__show_result(books)
-        # link = 'https://book.douban.com/subject/1007305/'
+
+        # link = 'https://book.douban.com/subject/1059336/'
         # self.__test_one_book(link)
+        
+        # one_page_link = 'https://book.douban.com/top250?start=100'
+        # self._test_one_page(one_page_link)
 
 spider = Spider()
 spider.go()
